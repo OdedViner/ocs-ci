@@ -1729,16 +1729,21 @@ def get_data_volumes(deviceset_pvs):
 
     """
     aws = AWS()
-
-    volume_ids = [
-        "vol-"
-        + pv.get()
-        .get("spec")
-        .get("awsElasticBlockStore")
-        .get("volumeID")
-        .partition("vol-")[-1]
-        for pv in deviceset_pvs
-    ]
+    if config.ENV_DATA.get("deployment_type").lower() == "upi":
+        volume_ids = [
+            pv.get("spec").get("spec").get("csi").get("volumeHandle")
+            for pv in deviceset_pvs
+        ]
+    else:
+        volume_ids = [
+            "vol-"
+            + pv.get()
+            .get("spec")
+            .get("awsElasticBlockStore")
+            .get("volumeID")
+            .partition("vol-")[-1]
+            for pv in deviceset_pvs
+        ]
     return [aws.ec2_resource.Volume(vol_id) for vol_id in volume_ids]
 
 
