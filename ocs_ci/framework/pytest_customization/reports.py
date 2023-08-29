@@ -1,9 +1,17 @@
 import os
 import pytest
 import logging
+
+from _pytest.logging import _LiveLoggingStreamHandler
 from py.xml import html
 from ocs_ci.utility.utils import email_reports, save_reports
 from ocs_ci.framework import config as ocsci_config
+from ocs_ci.utility.logging import (
+    console_logger,
+    CustomLoggerFilter,
+    OCSLogFormatter,
+    separator,
+)
 
 
 @pytest.mark.optionalhook
@@ -68,6 +76,11 @@ def pytest_sessionstart(session):
     Prepare results dict
     """
     session.results = dict()
+    handlers = logging.getLogger().handlers
+    for handler in handlers:
+        if isinstance(handler, _LiveLoggingStreamHandler):
+            custom_filter = CustomLoggerFilter()
+            handler.addFilter(custom_filter)
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -78,3 +91,41 @@ def pytest_sessionfinish(session, exitstatus):
         save_reports()
     if ocsci_config.RUN["cli_params"].get("email"):
         email_reports(session)
+
+
+def pytest_logger_config(logger_config):
+    logger_config.add_loggers([""], stdout_level="info")
+    logger_config.set_log_option_default("")
+    logger_config.split_by_outcome()
+    logger_config.set_formatter_class(OCSLogFormatter)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item):
+    test_name = f"TEST NAME: {item.name}"
+    console_logger.info(f"\n{separator(symbol_='-', val=test_name)}")
+    info_text = f"SETUP for {item.name}"
+    console_logger.info(f"{separator(symbol_='-', val=info_text)}")
+
+
+def pytest_fixture_setup(fixturedef, request):
+    console_logger.info(
+        f"Executing {fixturedef.scope} scope fixture: {fixturedef.argname}"
+    )
+
+
+def pytest_fixture_post_finalizer(fixturedef, request):
+    if fixturedef.scope != "session":
+        console_logger.info(
+            f"Finished finalizer from {fixturedef.scope} scope fixture: {fixturedef.argname}"
+        )
+
+
+def pytest_runtest_call(item):
+    info_text = f"CALL for {item.name}"
+    console_logger.info(f"{separator(symbol_='-', val=info_text)}")
+
+
+def pytest_runtest_teardown(item):
+    info_text = f"TEARDOWN for {item.name}"
+    console_logger.info(f"{separator(symbol_='-', val=info_text)}")

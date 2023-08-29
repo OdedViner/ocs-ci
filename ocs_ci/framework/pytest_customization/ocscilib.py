@@ -42,7 +42,6 @@ from ocs_ci.utility.utils import (
     load_config_file,
     create_stats_dir,
 )
-
 from ocs_ci.utility.memory import (
     get_consumed_ram,
     start_monitor_memory,

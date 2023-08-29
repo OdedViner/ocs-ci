@@ -284,6 +284,10 @@ def main(argv=None):
         framework.config.switch_ctx(i)
         pytest_logs_dir = utils.ocsci_log_path()
         utils.create_directory_path(framework.config.RUN["log_dir"])
+        print(
+            f"Logs from run-ci execution (RUN ID: {framework.config.RUN['run_id']}) for cluster"
+            f" {i} will be stored in: {pytest_logs_dir}"
+        )
     arguments.extend(
         [
             "-p",
@@ -293,7 +297,9 @@ def main(argv=None):
             "-p",
             "ocs_ci.framework.pytest_customization.reports",
             "--logger-logsdir",
-            pytest_logs_dir,
+            os.path.join(pytest_logs_dir, "pytest-logger"),
+            "--log-file",
+            os.path.join(pytest_logs_dir, "test-info-level.log"),
         ]
     )
     return pytest.main(arguments)
