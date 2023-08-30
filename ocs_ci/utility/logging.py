@@ -23,7 +23,7 @@ class OCSLogFormatter(logging.Formatter):
 
 class CustomLoggerFilter(logging.Filter):
     """
-    Logger filter which will filter out the specific logger messages we would
+    Logger filter which will filter out the specific logger messages we would.
     like to see in console output from pytest.
     """
 
